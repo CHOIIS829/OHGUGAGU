@@ -1,0 +1,388 @@
+DROP TABLE TB_MEMBER CASCADE CONSTRAINTS;
+DROP SEQUENCE SEQ_MEM;
+
+CREATE SEQUENCE SEQ_MEM;
+CREATE TABLE TB_MEMBER (  MEMBER_NO NUMBER PRIMARY KEY
+    			    	, MEMBER_ID VARCHAR2(200) NOT NULL UNIQUE
+    			        , MEMBER_PWD VARCHAR2(30) NOT NULL
+                        , MEMBER_NAME VARCHAR2(20) NOT NULL
+    				    , EMAIL VARCHAR2(20) NOT NULL
+    				    , GENDER CHAR(1) CHECK(GENDER IN ('M', 'F'))
+    				    , PHONE CHAR(11)
+    				    , BIRTH_DATE DATE
+    				    , POINT NUMBER DEFAULT 0 NOT NULL
+    				    , CREATED_AT DATE DEFAULT SYSDATE NOT NULL
+    				    , IS_DELETED CHAR(1) DEFAULT 'N' CHECK(IS_DELETED IN ('Y', 'N')) NOT NULL
+    				    , TOTAL_PAYMENT NUMBER DEFAULT 0 NOT NULL
+    				    , SOCIAL_PLATFORM VARCHAR2(20)
+);
+
+DROP TABLE TB_MEMBER_GRADE CASCADE CONSTRAINTS;
+DROP SEQUENCE SEQ_MEM_GRD;
+
+CREATE SEQUENCE SEQ_MEM_GRD;
+CREATE TABLE TB_MEMBER_GRADE ( GRADE_ID NUMBER PRIMARY KEY
+                             , GRADE_NAME VARCHAR2(20) NOT NULL UNIQUE
+                             , POINT_RATE NUMBER NOT NULL
+                             , MIN NUMBER NOT NULL
+                             , MAX NUMBER NOT NULL
+ );
+
+DROP TABLE TB_PRODUCT CASCADE CONSTRAINTS;
+DROP SEQUENCE SEQ_PROD;
+
+CREATE SEQUENCE SEQ_PROD;
+CREATE TABLE TB_PRODUCT ( PRODUCT_NO NUMBER PRIMARY KEY
+                        , CATEGORY VARCHAR2(50) NOT NULL
+                        , PRODUCT_NAME VARCHAR2(50) NOT NULL UNIQUE
+                        , PRICE NUMBER NOT NULL
+                        , STOCK NUMBER DEFAULT 0 NOT NULL 
+                        , P_COLOR VARCHAR2(20) 
+                        , P_SIZE VARCHAR2(20)
+                        , P_MATERIAL VARCHAR2(20) 
+                        , P_DETAIL VARCHAR2(500)
+                        , DISCOUNT_RATE NUMBER DEFAULT 0 NOT NULL 
+);
+
+DROP TABLE TB_CART CASCADE CONSTRAINTS;
+DROP SEQUENCE SEQ_CRT;
+
+CREATE SEQUENCE SEQ_CRT;
+CREATE TABLE TB_CART ( CART_NO NUMBER PRIMARY KEY
+                     , AMOUNT NUMBER NOT NULL 
+                     , MEMBER_NO NOT NULL
+                     , PRODUCT_NO NOT NULL
+                     , CONSTRAINT FK_MNO_CART FOREIGN KEY(MEMBER_NO) REFERENCES TB_MEMBER (MEMBER_NO) ON DELETE SET NULL
+                     , CONSTRAINT FK_PNO_CART FOREIGN KEY(PRODUCT_NO) REFERENCES TB_PRODUCT (PRODUCT_NO) ON DELETE SET NULL  			   
+);
+
+DROP TABLE TB_LIKES CASCADE CONSTRAINTS;
+
+CREATE TABLE TB_LIKES ( MEMBER_NO NOT NULL
+                      , PRODUCT_NO NOT NULL
+                      , CONSTRAINT FK_MNO_LIKES FOREIGN KEY(MEMBER_NO) REFERENCES TB_MEMBER (MEMBER_NO) ON DELETE SET NULL
+                      , CONSTRAINT FK_PNO_LIKES FOREIGN KEY(PRODUCT_NO) REFERENCES TB_PRODUCT (PRODUCT_NO) ON DELETE SET NULL
+);
+
+DROP TABLE TB_NOTICE CASCADE CONSTRAINTS;
+DROP SEQUENCE SEQ_NO;
+
+CREATE SEQUENCE SEQ_NO;
+CREATE TABLE TB_NOTICE ( NOTICE_NO NUMBER PRIMARY KEY
+                       , NOTICE_TITLE VARCHAR2(50) NOT NULL
+                       , NOTICE_CONTENT VARCHAR2(500)
+                       , CREATED_AT DATE DEFAULT SYSDATE NOT NULL
+                       , STATUS CHAR(1) DEFAULT 'Y' CHECK(STATUS IN ('Y', 'N')) NOT NULL
+);
+
+DROP TABLE TB_IMAGE CASCADE CONSTRAINTS;
+DROP SEQUENCE SEQ_IMG;
+
+CREATE SEQUENCE SEQ_IMG;
+CREATE TABLE TB_IMAGE ( IMG_NO NUMBER PRIMARY KEY
+                      , FILE_NAME VARCHAR2(200) NOT NULL
+                      , IS_THUMBNAIL CHAR(1) DEFAULT 'N' CHECK(IS_THUMBNAIL IN ('Y', 'N')) NOT NULL
+                      , PRODUCT_NO NUMBER
+                      , CONSTRAINT FK_PNO_IMG FOREIGN KEY(PRODUCT_NO) REFERENCES TB_PRODUCT (PRODUCT_NO) ON DELETE SET NULL
+);
+
+DROP TABLE TB_ADDRESS CASCADE CONSTRAINTS;
+DROP SEQUENCE SEQ_ADDR;
+
+CREATE SEQUENCE SEQ_ADDR;
+CREATE TABLE TB_ADDRESS ( ADDRESS_NO NUMBER PRIMARY KEY
+    			    	, ADDR VARCHAR2(200) NOT NULL
+                        , ADDR_DETAIL VARCHAR2(100)
+                        , PHONE CHAR(11) NOT NULL
+                        , RECEIVER VARCHAR2(1000)
+                        , MEMBER_NO NUMBER
+                        , CONSTRAINT FK_MNO_ADDR FOREIGN KEY(MEMBER_NO) REFERENCES TB_MEMBER (MEMBER_NO) ON DELETE SET NULL
+);
+
+DROP TABLE TB_ORDER CASCADE CONSTRAINTS;
+DROP SEQUENCE SEQ_OD;
+
+CREATE SEQUENCE SEQ_OD;
+CREATE TABLE TB_ORDER ( ORDER_NO NUMBER PRIMARY KEY
+                      , ORDER_NAME VARCHAR2(200)
+                      , DELIVERY_FEE NUMBER DEFAULT 0 NOT NULL
+                      , ORDER_MSG VARCHAR2(50)
+                      , PHONE CHAR(11) NOT NULL
+                      , ORDERED_AT DATE DEFAULT SYSDATE NOT NULL
+                      , PRICE NUMBER NOT NULL
+                      , PAY_NO VARCHAR2(200) 
+                      , WAYBILL_NO VARCHAR2(200)
+                      , STATUS VARCHAR2(30) DEFAULT '결제완료'
+					  , MEMBER_NO NUMBER
+					  , ADDRESS_NO NUMBER
+                      , CONSTRAINT FK_MNO_OD FOREIGN KEY(MEMBER_NO) REFERENCES TB_MEMBER ON DELETE SET NULL
+                      , CONSTRAINT FK_ANO_OD FOREIGN KEY(ADDRESS_NO) REFERENCES TB_ADDRESS ON DELETE SET NULL
+);
+
+DROP TABLE TB_BOARD CASCADE CONSTRAINTS;
+DROP SEQUENCE SEQ_BD;
+
+CREATE SEQUENCE SEQ_BD;
+CREATE TABLE TB_BOARD ( BOARD_NO NUMBER PRIMARY KEY
+                      , BOARD_TITLE VARCHAR2(200)
+                      , BOARD_CONTENT VARCHAR2(2000)
+                      , CREATED_AT DATE
+                      , ANSWER VARCHAR2(1000)
+                      , UPDATED_AT DATE
+                      , STATUS CHAR(1) DEFAULT 'Y' NOT NULL CHECK(STATUS IN ('Y', 'N'))
+                      , MEMBER_NO NUMBER
+                      , ORDER_NO NUMBER
+                      , PRODUCT_NO NUMBER
+                      , CONSTRAINT FK_MNO_BD FOREIGN KEY(MEMBER_NO) REFERENCES TB_MEMBER (MEMBER_NO) ON DELETE SET NULL
+                      , CONSTRAINT FK_ONO_BD FOREIGN KEY(ORDER_NO) REFERENCES TB_ORDER (ORDER_NO) ON DELETE SET NULL
+                      , CONSTRAINT FK_PNO_BD FOREIGN KEY(PRODUCT_NO) REFERENCES TB_PRODUCT (PRODUCT_NO) ON DELETE SET NULL
+);
+
+DROP TABLE TB_ORDER_PRODUCT CASCADE CONSTRAINTS;
+DROP SEQUENCE SEQ_OD_PD;
+
+CREATE SEQUENCE SEQ_OD_PD;
+CREATE TABLE TB_ORDER_PRODUCT( ORDER_PRODUCT_NO NUMBER PRIMARY KEY
+                             , ORDER_NO NUMBER
+                             , PRODUCT_NO NUMBER					
+                             , CONSTRAINT FK_PNO_OD_PD FOREIGN KEY(PRODUCT_NO) REFERENCES TB_PRODUCT ON DELETE SET NULL
+                             , CONSTRAINT FK_ONO_OD_PD FOREIGN KEY(ORDER_NO) REFERENCES TB_ORDER ON DELETE SET NULL
+);
+
+DROP TABLE TB_REVIEW CASCADE CONSTRAINTS;
+DROP SEQUENCE SEQ_RV;
+
+CREATE SEQUENCE SEQ_RV;
+CREATE TABLE TB_REVIEW ( REVIEW_NO NUMBER PRIMARY KEY
+                       , CONTENT VARCHAR2(1000)
+                       , CREATED_AT DATE DEFAULT SYSDATE
+                       , FILE_NAME VARCHAR2(200)
+					   , STATUS CHAR(1) DEFAULT 'Y' NOT NULL CHECK(STATUS IN ('Y', 'N'))
+					   , ORDER_NO NUMBER
+                       , PRODUCT_NO NUMBER
+                       , CONSTRAINT FK_PNO_RV FOREIGN KEY(PRODUCT_NO) REFERENCES TB_PRODUCT ON DELETE SET NULL
+                       , CONSTRAINT FK_ONO_RV FOREIGN KEY(ORDER_NO) REFERENCES TB_ORDER ON DELETE SET NULL
+);
+
+-- 회원
+INSERT INTO TB_MEMBER
+VALUES (SEQ_MEM.NEXTVAL
+     , 'admin'
+     , '1234'
+     , '최인수'
+     , 'admin@gmail.com'
+     , NULL
+     , NULL
+     , NULL
+     , 999999999
+     , SYSDATE
+     , 'N'
+     , 0
+     , NULL); 
+     
+INSERT INTO TB_MEMBER
+VALUES (SEQ_MEM.NEXTVAL
+     , 'user01'
+     , 'pass01'
+     , '김은지'
+     , 'user01@gmail.com'
+     , NULL
+     , NULL
+     , NULL
+     , 0
+     , SYSDATE
+     , 'N'
+     , 0
+     , NULL); 
+     
+INSERT INTO TB_MEMBER
+VALUES (SEQ_MEM.NEXTVAL
+     , 'user02'
+     , 'user02'
+     , '임보영'
+     , 'user02@gmail.com'
+     , NULL
+     , NULL
+     , NULL
+     , 100000
+     , SYSDATE
+     , 'N'
+     , 0
+     , NULL); 
+
+INSERT INTO TB_MEMBER
+VALUES (SEQ_MEM.NEXTVAL
+     , 'user03'
+     , 'user03'
+     , '김은지'
+     , 'user03@gmail.com'
+     , NULL
+     , NULL
+     , NULL
+     , 100000
+     , SYSDATE
+     , 'N'
+     , 0
+     , NULL);
+
+-- 배송지 
+INSERT INTO TB_ADDRESS
+VALUES ( SEQ_ADDR.NEXTVAL
+       , '강남구 역삼동'
+       , '11번지 1층'
+       , 01011112222
+       , '감자친구'
+       , 4);
+      
+-- 상품 더미데이터 
+INSERT INTO TB_PRODUCT
+VALUES(SEQ_PROD.NEXTVAL
+     , '의자'
+     , '검은나무의자'
+     , 100000
+     , 20
+     , 'BLACK'
+     , '100*100*100'
+     , 'WOOD'
+     , NULL
+     , 0);
+
+INSERT INTO TB_PRODUCT
+VALUES(SEQ_PROD.NEXTVAL
+     , '침대'
+     , '흰색철제침대'
+     , 200000
+     , 30
+     , 'WHITE'
+     , '100*1000*100'
+     , 'STEEL'
+     , NULL
+     , 10);
+     
+INSERT INTO TB_PRODUCT
+VALUES(SEQ_PROD.NEXTVAL
+     , '책상'
+     , '파란세라믹책상'
+     , 300000
+     , 40
+     , 'BLUE'
+     , '300*200*100'
+     , 'CERAMIC'
+     , NULL
+     , 5);
+
+INSERT INTO TB_PRODUCT
+VALUES(SEQ_PROD.NEXTVAL
+     , '의자'
+     , '노란철제의자'
+     , 100000
+     , 20
+     , 'YELLOW'
+     , '100*100*100'
+     , 'STEEL'
+     , NULL
+     , 59);   
+     
+INSERT INTO TB_ORDER 
+VALUES ( SEQ_OD.NEXTVAL
+       , 'A123qw'
+       , 20000
+       , '문 앞에 놔주세요.'
+       , 01011112222
+       , DEFAULT
+       , 120000
+       , 'A123'
+       , NULL
+       , DEFAULT
+       , 4 -- 회원번호
+       , 1);
+
+-- 주문, 상품 중간테이블       
+INSERT INTO TB_ORDER_PRODUCT
+VALUES (SEQ_OD_PD.NEXTVAL
+      , 1
+      , 1);
+      
+INSERT INTO TB_ORDER_PRODUCT
+VALUES (SEQ_OD_PD.NEXTVAL
+      , 1
+      , 2);
+
+-- CART 테이블 
+INSERT INTO TB_CART
+VALUES (SEQ_CRT.NEXTVAL, 3, 4, 2);
+
+INSERT INTO TB_CART
+VALUES (SEQ_CRT.NEXTVAL, 3, 2, 2);
+
+INSERT INTO TB_CART
+VALUES (SEQ_CRT.NEXTVAL, 3, 2, 1);
+
+INSERT INTO TB_CART
+VALUES (SEQ_CRT.NEXTVAL, 3, 3, 3);
+
+-- 상품 이미지
+INSERT INTO TB_IMAGE
+VALUES ( SEQ_IMG.NEXTVAL,
+         'https://colimg2.godohosting.com//goods/21/05/19/1000006431/1000006431_detail_092.jpg',
+         'Y',
+         1
+        );
+
+
+INSERT INTO TB_IMAGE
+VALUES ( SEQ_IMG.NEXTVAL,
+         'https://colimg2.godohosting.com//goods/21/05/19/1000006431/1000006431_detail_092.jpg',
+         'Y',
+         2
+        );
+
+INSERT INTO TB_IMAGE
+VALUES ( SEQ_IMG.NEXTVAL,
+         'https://colimg2.godohosting.com//goods/21/05/19/1000006431/1000006431_detail_092.jpg',
+         'Y',
+         3
+        );
+
+INSERT INTO TB_IMAGE
+VALUES ( SEQ_IMG.NEXTVAL,
+         'https://colimg2.godohosting.com//goods/21/05/19/1000006431/1000006431_detail_092.jpg',
+         'Y',
+         4
+        );
+
+-- 회원등급
+INSERT INTO TB_MEMBER_GRADE
+VALUES ( 1,
+         '일반',
+         1,
+         0,
+         100000
+        );
+        
+INSERT INTO TB_MEMBER_GRADE
+VALUES ( 2,
+         '우수',
+         2,
+         100001,
+         200000
+        );
+        
+INSERT INTO TB_MEMBER_GRADE
+VALUES ( 3,
+         '최우수',
+         3,
+         200001,
+         300000
+        );
+
+INSERT INTO TB_MEMBER_GRADE
+VALUES ( 4,
+         'VIP',
+         5,
+         300001,
+         400000
+        );
+
+
+COMMIT;
